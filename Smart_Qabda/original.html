@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Qabda - مركز التقارير الذكي</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="search">🔍 بحث واستعلام</button>
+        <button class="tab-btn" data-tab="upload">📤 رفع بيانات (Excel)</button>
+    </div>
+
+    <div id="searchTab" class="tab-content active">
+        <div class="header-section">
+            <div class="title-area">
+                <h1>📊 نظام التقارير الذكي | بحث مباشر</h1>
+            </div>
+
+            <div class="actions-area">
+                <div class="rise-date-container">
+                    <label>📅 تاريخ رفع البيانات:</label>
+                    <input type="date" id="RiseDate" disabled>
+                </div>
+                <div class="btn-group">
+                    <button id="exportFilteredBtn" class="btn-export">📎 تصدير (3 ملفات + شامل)</button>
+                    <button id="deleteAllDataBtn" class="btn-danger-all">🗑️ حذف قاعدة البيانات</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-grid">
+            <div class="filter-group">
+                <label>🔢 رقم العداد</label>
+                <input type="text" id="searchMeter" placeholder="بحث برقم العداد...">
+            </div>
+            <div class="filter-group">
+                <label>📱 رقم SIM</label>
+                <input type="text" id="searchSIM" placeholder="بحث برقم الشريحة...">
+            </div>
+            <div class="filter-group">
+                <label>📅 تاريخ التعاقد</label>
+                <input type="date" id="searchContractDate">
+            </div>
+            <div class="filter-group">
+                <label>⏳ تاريخ الرفع (Rise Date)</label>
+                <input type="date" id="searchRiseDate">
+            </div>
+            <div class="filter-group">
+                <label>🗺️ القطاع العام</label>
+                <select id="searchGenRegion">
+                    <option value="">الكل</option>
+                    <option>قطاع دمياط</option>
+                    <option>قطاع شمال الدقهلية</option>
+                    <option>قطاع جنوب الدقهلية</option>
+                    <option>قطاع كفر الشيخ</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>📋 نوع التقرير (TYPE)</label>
+                <select id="filterType">
+                    <option value="">الكل</option>
+                    <option value="A1">A1</option>
+                    <option value="A2">A2</option>
+                    <option value="A3">A3</option>
+                    <option value="A4">A4</option>
+                    <option value="A5">A5</option>
+                </select>
+            </div>
+
+            <div class="btn-action-group">
+                <button id="applyFilterBtn" class="btn-apply">🔍 تطبيق الفلتر</button>
+                <button id="clearFiltersBtn" class="btn-clear">🗑️ مسح الفلاتر</button>
+            </div>
+        </div>
+
+        <div class="stats-bar">
+            <div>📌 إجمالي النتائج: <span id="totalCount">0</span></div>
+            <div>👁️ المعروض: <span id="visibleCount">0</span></div>
+            <div class="badge-info">⚡ متصل بـ Firebase</div>
+        </div>
+
+        <div class="table-container">
+            <table id="metersTable">
+                <thead>
+                    <tr id="tableHeaderRow"></tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+
+        <div class="pagination">
+            <button id="prevPageBtn" disabled>⬅️ السابق</button>
+            <span id="pageInfo" class="page-info">صفحة 1</span>
+            <button id="nextPageBtn" disabled>التالي ➡️</button>
+        </div>
+    </div>
+
+    <div id="uploadTab" class="tab-content">
+        <div class="upload-area">
+            <h1>📤 رفع ملفات Excel</h1>
+            <p style="color: #94a3b8; margin-bottom: 20px;">تأكد من اختيار "تاريخ رفع البيانات" من تبويب البحث قبل البدء
+            </p>
+            <div class="file-input-wrapper">
+                <button class="upload-btn">📂 اختر ملفات Excel</button>
+                <input type="file" id="fileInput" multiple accept=".xlsx, .xls, .csv">
+            </div>
+            <div id="fileListContainer" class="file-list">
+                <ul id="fileList"></ul>
+            </div>
+            <button id="processBtn" class="btn-main">🚀 بدء الرفع والمزامنة</button>
+        </div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+    <script>
+        // تبديل التبويبات
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.tab + 'Tab').classList.add('active');
+            });
+        });
+    </script>
+</body>
+
+</html>
