@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>نظام التكهين - تكهين العدادات الكهربائية</title>
+
+  <link rel="stylesheet" href="G1_Calib.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+</head>
+
+<body>
+  <main class="app">
+    <!-- ================= RIGHT SIDE ================= -->
+    <div class="right-side">
+      <section class="table-top-section">
+        <div class="table-header">
+          <ion-icon name="list-outline"></ion-icon>
+
+          <div class="modern-dropdown">
+            <button class="dropdown-btn" id="dropdownBtn">
+              ▾ اختر الصفحة للانتقال
+            </button>
+            <div class="dropdown-menu" id="dropdownMenu">
+              <div class="dropdown-group" data-icon="📁">الفحص</div>
+              <div class="dropdown-item" data-page="Entr_Calib.html">دخول فحص عداد</div>
+              <div class="dropdown-item" data-page="Calib.html">فحص عداد</div>
+              <div class="dropdown-item" data-page="Edite_Calib.html">تعديل بيانات فحص عداد</div>
+              <div class="dropdown-item" data-page="Print_Out_Calib.html">طباعة تقرير فحص عداد</div>
+              <div class="dropdown-item" data-page="Recived_Calib.html">تسليم عداد</div>
+
+              <div class="dropdown-group" data-icon="📊">تقارير الفحص</div>
+              <div class="dropdown-item" data-page="R_Entr_Calib.html">تقرير دخول فحص عداد</div>
+              <div class="dropdown-item" data-page="R_Calib.html">تقرير فحص عداد</div>
+
+              <div class="dropdown-group" data-icon="🛠️">الصيانة</div>
+              <div class="dropdown-item" data-page="Entr_Maint.html">دخول صيانة عداد</div>
+              <div class="dropdown-item" data-page="Maint.html">صيانة عداد</div>
+              <div class="dropdown-item" data-page="Edite_Maint.html">تعديل بيانات صيانة عداد</div>
+              <div class="dropdown-item" data-page="Print_Out_SMaint.html">طباعة تقرير فحص صيانة عداد</div>
+              <div class="dropdown-item" data-page="Print_Out_TMaint.html">طباعة تقرير مجمع صيانة عداد</div>
+
+              <div class="dropdown-group" data-icon="📑">تقارير الصيانة</div>
+              <div class="dropdown-item" data-page="R_Entr_Maint.html">تقرير دخول صيانة عداد</div>
+              <div class="dropdown-item" data-page="R_Maint.html">تقرير صيانة عداد</div>
+
+              <div class="dropdown-group" data-icon="♻️">التكهين</div>
+              <div class="dropdown-item" data-page="Takheen.html">تكهين عداد</div>
+              <div class="dropdown-item" data-page="Edite_Takheen.html">تعديل بيانات تكهين عداد</div>
+              <div class="dropdown-item" data-page="R_Maint_Takheen.html">تقرير تكهين عداد</div>
+
+              <div class="dropdown-group" data-icon="🗄️">الأرشيف</div>
+              <div class="dropdown-item" data-page="R_Calib_Archive.html">أرشيف الفحص</div>
+              <div class="dropdown-item" data-page="R_Maint_Archive.html">أرشيف الصيانة</div>
+              <div class="dropdown-item" data-page="Re_Print_Out_Calib.html">إعادة طباعة تقرير فحص عداد</div>
+              <div class="dropdown-item" data-page="Re_Print_Out_SMaint.html">إعادة طباعة تقرير فحص صيانة عداد</div>
+              <div class="dropdown-item" data-page="Re_Print_Out_TMaint.html">إعادة طباعة تقرير مجمع صيانة عداد</div>
+
+              <div class="dropdown-item" data-page="Main_Dashboard.html" data-icon="🏠">الصفحة الرئيسية</div>
+            </div>
+          </div>
+
+          <input type="date" id="takheendate" class="calib_date" readonly />
+          <div class="table-header-controls">
+            <input id="searchInput" placeholder="🔍 ابحث في جميع الحقول..." />
+            <button id="exportBtn">
+              <ion-icon name="download-outline"></ion-icon> تصدير Excel
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Table Section -->
+      <section class="table-wrapper">
+        <div class="table-container">
+          <table id="dataTable">
+            <thead>
+              <tr>
+                <th>نوع النظام</th>
+                <th>رقم العداد</th>
+                <th>اسم المشترك</th>
+                <th>نوع العداد</th>
+                <th>نوع التوصيل</th>
+                <th>سنة الصنع</th>
+                <th>القطاع</th>
+                <th>الهندسة</th>
+                <th>سبب الرفع</th>
+                <th>تاريخ الرفع</th>
+                <th>تقرير فحص الهندسة</th>
+                <th>سبب التكهين</th>
+                <th>تاريخ التكهين</th>
+                <th>ملاحظات</th>
+                <th>الحالة</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr id="noDataRow">
+                <td colspan="15" class="no-data-cell">
+                  <ion-icon name="document-outline"></ion-icon>
+                  <p>لا توجد بيانات لعرضها</p>
+                  <p>ابدأ بإضافة بيانات جديدة</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <div class="row-counter-dashboard">
+        <div class="dashboard-card">
+          <h3>عدد السجلات</h3>
+          <span id="rowCountValue">0</span>
+        </div>
+      </div>
+
+      <div class="scroll-buttons">
+        <button id="scrollUp" class="scroll-btn" title="إلى الأعلى">
+          <ion-icon name="chevron-up-outline"></ion-icon>
+        </button>
+        <button id="scrollDown" class="scroll-btn" title="إلى الأسفل">
+          <ion-icon name="chevron-down-outline"></ion-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- ================= LEFT SIDE ================= -->
+    <div class="left-side">
+      <section class="glass">
+        <div class="header-top">
+          <div class="logo"><ion-icon name="flash-outline"></ion-icon></div>
+          <div class="header-text">
+            وزارة الكهرباء والطاقة المتجددة<br />
+            الشركة القابضة لكهرباء مصر<br />
+            شركة شمال الدلتا لتوزيع الكهرباء
+          </div>
+        </div>
+
+        <h1 class="title-main">الإدارة العامة لأنظمة العدادات الحديثة</h1>
+
+        <h3>بيانات عدادات التكهين</h3>
+
+        <div class="form-grid">
+          <select id="type" aria-label="نوع النظام">
+            <option value="">▾ اختر نوع النظام</option>
+            <option>الأصدار</option>
+            <option>مسبق الدفع</option>
+            <option>العدادات الذكية</option>
+          </select>
+
+          <select id="mconn" aria-label="نوع التوصيل">
+            <option value="">▾نوع التوصيل</option>
+            <option>أحادي</option>
+            <option>ثلاثي-مباشر</option>
+            <option>ثلاثي-غير مباشر</option>
+          </select>
+
+          <input id="year" placeholder="سنة الصنع" />
+
+          <input id="mno" placeholder="رقم العداد" />
+          <input id="mname" placeholder="اسم المشترك" />
+
+          <select id="keta3" aria-label="القطاع">
+            <option value="">▾ القطاع</option>
+            <option>دمياط</option>
+            <option>شمال-الدقهلية</option>
+            <option>جنوب-الدقهلية</option>
+            <option>كفر الشيخ</option>
+          </select>
+
+          <select id="handsa" aria-label="الهندسة">
+            <option value="">▾ الهندسة</option>
+            <option>هندسة شمال دمياط</option>
+            <option>هندسة جنوب دمياط</option>
+            <option>هندسة عزبة البرج</option>
+            <option>هندسة كفر سعد</option>
+            <option>هندسة كفر البطيخ</option>
+            <option>هندسة راس البر</option>
+            <option>هندسة دمياط الجديدة</option>
+            <option>هندسة الزرقا</option>
+            <option>هندسة فارسكور</option>
+            <option>هندسة الروضة</option>
+            <option>هندسة الشعراء</option>
+            <option>هندسة مدينة شربين</option>
+            <option>هندسة قري شربين</option>
+            <option>هندسة دكرنس</option>
+            <option>هندسة جمصة</option>
+            <option>هندسة قري بلقاس</option>
+            <option>هندسة مدينة بلقاس</option>
+            <option>هندسة الستاموني</option>
+            <option>هندسة بني عبيد</option>
+            <option>هندسة منية النصر</option>
+            <option>هندسة ميت سلسيل</option>
+            <option>هندسة الجمالية</option>
+            <option>هندسة قري المنزلة</option>
+            <option>هندسة مدينة المنزلة</option>
+            <option>هندسة المطرية</option>
+            <option>هندسة شرق المنصورة</option>
+            <option>هندسة غرب المنصورة</option>
+            <option>هندسة طلخا</option>
+            <option>هندسة نبروه</option>
+            <option>هندسة قري المنصورة 1</option>
+            <option>هندسة قري المنصورة 2</option>
+            <option>هندسة اجا</option>
+            <option>هندسة مدينة السنبلاوين</option>
+            <option>هندسة قري السنبلاوين</option>
+            <option>هندسة تمي الامديد</option>
+            <option>هندسة مدينة ميت غمر</option>
+            <option>هندسة قري ميت غمر</option>
+            <option>هندسة كوم النور</option>
+            <option>هندسة مدينة كفر الشيخ</option>
+            <option>هندسة غرب كفر الشيخ</option>
+            <option>هندسة شرق كفر الشيخ</option>
+            <option>هندسة قلين</option>
+            <option>هندسة قرى سيدي سالم</option>
+            <option>هندسة مدينة سيدي سالم</option>
+            <option>هندسة الرياض</option>
+            <option>هندسة مدينة دسوق</option>
+            <option>هندسة قرى شمال دسوق</option>
+            <option>هندسة قرى جنوب دسوق</option>
+            <option>هندسة فوه</option>
+            <option>هندسة مطوبس</option>
+            <option>هندسة مدينة الحامول</option>
+            <option>هندسة قرى الحامول</option>
+            <option>هندسة بيلا</option>
+            <option>هندسة بلطيم</option>
+            <option>هندسة برج البرلس</option>
+          </select>
+
+          <select id="mtype" aria-label="نوع العداد">
+            <option value="">▾ اختر نوع العداد</option>
+            <option>جلوبال-مسبق</option>
+            <option>سويدى-مسبق</option>
+            <option>المصرية-مسبق</option>
+            <option>اسكرا-مسبق</option>
+            <option>جيزة باور-مسبق</option>
+            <option>ميكانيكي</option>
+            <option>رقمى</option>
+            <option>عدادات-ذكية</option>
+            <option>أخرى</option>
+          </select>
+
+          <select id="removingfor" aria-label="سبب الرفع">
+            <option value="">سبب الرفع</option>
+            <option>الفحص</option>
+            <option>الصيانة</option>
+            <option>الهدم والبناء</option>
+            <option>تصفية مشترك</option>
+            <option>زيادة قدرة</option>
+            <option>احلال رباعي</option>
+            <option>تنازل</option>
+            <option>خطة احلال</option>
+            <option>احلال عدم سداد</option>
+          </select>
+
+          <label for="uploaddate">تاريخ الرفع</label>
+          <input type="date" class="calibdate" id="uploaddate" placeholder="تاريخ الرفع" />
+
+          <select id="mremovingfor" aria-label="تقرير فحص الهندسة">
+            <option value="">تقرير فحص الهندسة</option>
+            <option>عطل بالبطارية ارسالة للشركة الموردة للصيانة</option>
+            <option>قارىء الكروت لا يعمل ارسالة للشركة الموردة للصيانة</option>
+            <option>العداد لا يقبل الشحن ارسالة للشركة الموردة للصيانة</option>
+            <option>العداد لا يقوم بالتوصيل ارسالة للشركة الموردة للصيانة</option>
+            <option>الشاشة عاطلة ارسالة للشركة الموردة للصيانة</option>
+            <option>العداد يحتاج للتهيئة ارسالة للشركة الموردة للصيانة</option>
+            <option>تقرير فحص للعداد من قبل الشركة الموردة</option>
+            <option>تلف بجسم/روزتة العداد ارسالة للشركة الموردة للصيانة</option>
+            <option>زيادة قدرة ارسالة للشركة الموردة للصيانة</option>
+            <option>بحث مديونية بالعداد ارسالة للشركة الموردة للصيانة</option>
+            <option>العداد محترق ارسالة للشركة الموردة للصيانة</option>
+            <option>العداد لا يعمل ارسالة للشركة الموردة للصيانة</option>
+            <option>لمبة التلاعب تعمل باستمرار ارسالة للشركة الموردة للصيانة</option>
+            <option>العداد يعمل بدون شحن ارسالة للشركة الموردة للصيانة</option>
+            <option>العداد لا يسجل الاستهلاك ارسالة للشركة الموردة للصيانة</option>
+            <option>العداد يسجل استهلاك بدون حمل ارسالة للشركة الموردة للصيانة</option>
+            <option>blocking</option>
+          </select>
+
+          <select id="takheenfor" aria-label="سبب التكهين">
+            <option value="">▾ سبب التكهين</option>
+            <option>عاطل</option>
+            <option>التقادم</option>
+            <option>تلاعب</option>
+            <option>زيادة قدرة</option>
+          </select>
+
+          <textarea id="notes" placeholder="ملاحظات"></textarea>
+        </div>
+
+        <div class="buttons">
+          <button id="saveBtn" class="primary">حفظ</button>
+          <button id="clearBtn" class="secondary">تفريغ</button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.1/firebase-app.js";
+    import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.3.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAnKRhT5xJTBvsQKpW7e9w-hGSbAQJWTSo",
+      authDomain: "production1-ae85.firebaseapp.com",
+      projectId: "production1-ae85",
+      storageBucket: "production1-ae85.firebasestorage.app",
+      messagingSenderId: "490438031865",
+      appId: "1:490438031865:web:a4a69335989f30cd13a528",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const el = (id) => document.getElementById(id);
+    const tableBody = el("tableBody");
+    const rowCount = el("rowCountValue");
+    const searchInput = el("searchInput");
+
+    let allData = [];
+    let filteredData = [];
+
+    const toast = (title, icon = "success") => {
+      Swal.fire({
+        title: title,
+        icon: icon,
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
+      });
+    };
+
+    function setTodayDates() {
+      const today = new Date().toISOString().split("T")[0];
+      if (el("uploaddate")) el("uploaddate").value = today;
+      if (el("takheendate")) el("takheendate").value = today;
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return "";
+      const date = new Date(dateStr);
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
+    }
+
+    // Fetch records from Archive_Takheen only
+    async function fetchData() {
+      tableBody.innerHTML = "<tr><td colspan='15' class='no-data-cell'>جاري التحميل...</td></tr>";
+
+      Swal.fire({
+        title: "جاري جلب البيانات...",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+      });
+
+      try {
+        const snapshot = await get(ref(db, "Archive_Takheen"));
+        tableBody.innerHTML = "";
+        allData = [];
+
+        if (!snapshot.exists()) {
+          tableBody.innerHTML = `
+            <tr id="noDataRow">
+              <td colspan="15" class="no-data-cell">
+                <ion-icon name="document-outline"></ion-icon>
+                <p>لا توجد بيانات في أرشيف التكهين</p>
+                <p>قم بإضافة بيانات جديدة</p>
+               </tr>
+          `;
+          updateRowCount();
+          Swal.close();
+          return;
+        }
+
+        snapshot.forEach((child) => {
+          const record = child.val().otherdata || child.val();
+          allData.push({ 
+            ...record, 
+            firebaseKey: child.key 
+          });
+        });
+
+        filteredData = [...allData];
+        renderTable();
+        Swal.close();
+        
+        if (allData.length === 0) {
+          Swal.fire({
+            icon: "info",
+            title: "لا توجد بيانات",
+            text: "لا توجد بيانات في أرشيف التكهين",
+            confirmButtonText: "حسناً"
+          });
+        }
+      } catch (err) {
+        Swal.fire("خطأ", "فشل تحميل البيانات: " + err.message, "error");
+        console.error(err);
+      }
+    }
+
+    function renderTable() {
+      tableBody.innerHTML = "";
+
+      if (filteredData.length === 0) {
+        tableBody.innerHTML = `
+          <tr id="noDataRow">
+            <td colspan="15" class="no-data-cell">
+              <ion-icon name="document-outline"></ion-icon>
+              <p>لا توجد بيانات لعرضها</p>
+              <p>أرشيف التكهين فارغ</p>
+             </tr>
+        `;
+        updateRowCount();
+        return;
+      }
+
+      filteredData.forEach((d) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${d.Type || ""}</td>
+          <td>${d.MNO || ""}</td>
+          <td>${d.MNAME || ""}</td>
+          <td>${d.Mtype || ""}</td>
+          <td>${d.Connection || ""}</td>
+          <td>${d.YEAR || ""}</td>
+          <td>${d.Keta3 || ""}</td>
+          <td>${d.Handsa || ""}</td>
+          <td>${d.Removingfor || ""}</td>
+          <td>${formatDate(d.Uploaddate)}</td>
+          <td>${d.Mremovingfor || ""}</td>
+          <td>${d.Takheenfor || ""}</td>
+          <td>${formatDate(d.Takheendate)}</td>
+          <td>${d.Notes || ""}</td>
+          <td><span class="status completed">تم التكهين</span></td>
+        `;
+        tr.onclick = () => fillForm(d);
+        tableBody.appendChild(tr);
+      });
+      updateRowCount();
+    }
+
+    function fillForm(d) {
+      // Remove previous selection
+      document.querySelectorAll(".selected-row").forEach(r => {
+        r.classList.remove("selected-row");
+        r.style.backgroundColor = "";
+      });
+      
+      // Highlight current row
+      const rows = document.querySelectorAll("#tableBody tr");
+      rows.forEach(row => {
+        if (row.cells[1]?.innerText === d.MNO) {
+          row.classList.add("selected-row");
+          row.style.backgroundColor = "#e3f2fd";
+        }
+      });
+      
+      el("mno").value = d.MNO || "";
+      el("mname").value = d.MNAME || "";
+      el("type").value = d.Type || "";
+      el("mconn").value = d.Connection || "";
+      el("year").value = d.YEAR || "";
+      el("keta3").value = d.Keta3 || "";
+      el("handsa").value = d.Handsa || "";
+      el("mtype").value = d.Mtype || "";
+      el("removingfor").value = d.Removingfor || "";
+      el("mremovingfor").value = d.Mremovingfor || "";
+      el("takheenfor").value = d.Takheenfor || "";
+      el("uploaddate").value = d.Uploaddate || "";
+      el("takheendate").value = d.Takheendate || "";
+      el("notes").value = d.Notes || "";
+
+      // Store the record for saving/editing
+      window.selectedRecord = d;
+      toast(`تم اختيار العداد: ${d.MNO}`, "info");
+    }
+
+    async function saveData() {
+      const mno = el("mno").value.trim();
+      if (!mno) {
+        Swal.fire("تحذير", "يرجى إدخال رقم العداد", "warning");
+        return;
+      }
+
+      const takheenfor = el("takheenfor").value;
+      if (!takheenfor) {
+        Swal.fire("تحذير", "يرجى اختيار سبب التكهين", "warning");
+        return;
+      }
+
+      Swal.fire({
+        title: "جاري الحفظ...",
+        didOpen: () => Swal.showLoading(),
+      });
+
+      const takheendate = el("takheendate").value || new Date().toISOString().split("T")[0];
+
+      const meterData = {
+        MNO: el("mno").value,
+        MNAME: el("mname")?.value || "",
+        Type: el("type").value,
+        Keta3: el("keta3").value,
+        Handsa: el("handsa").value,
+        Mtype: el("mtype").value,
+        Connection: el("mconn").value,
+        YEAR: el("year").value,
+        Removingfor: el("removingfor").value,
+        Mremovingfor: el("mremovingfor").value,
+        Takheenfor: takheenfor,
+        Uploaddate: el("uploaddate").value,
+        Takheendate: takheendate,
+        Notes: el("notes").value,
+        Status: "تم التكهين",
+        TakheenTimestamp: new Date().toISOString()
+      };
+
+      try {
+        const safeKey = mno.replace(/[.#$[\]]/g, "_");
+        
+        // Save ONLY to Archive_Takheen
+        await set(ref(db, `Archive_Takheen/${safeKey}`), { otherdata: meterData });
+
+        Swal.fire({
+          icon: "success",
+          title: "تم الحفظ!",
+          text: "تم تسجيل بيانات التكهين بنجاح في الأرشيف",
+          timer: 2000,
+          showConfirmButton: false
+        });
+
+        // Clear form and refresh
+        clearFilters();
+        fetchData();
+      } catch (err) {
+        Swal.fire("خطأ", "حدث خطأ أثناء الحفظ: " + err.message, "error");
+      }
+    }
+
+    function updateRowCount() {
+      const visibleRows = document.querySelectorAll("#tableBody tr:not(#noDataRow)");
+      rowCount.textContent = visibleRows.length;
+    }
+
+    function searchTable() {
+      const searchTerm = searchInput.value.toLowerCase().trim();
+
+      if (!searchTerm) {
+        filteredData = [...allData];
+      } else {
+        filteredData = allData.filter(d =>
+          (d.MNO && d.MNO.toString().toLowerCase().includes(searchTerm)) ||
+          (d.MNAME && d.MNAME.toLowerCase().includes(searchTerm)) ||
+          (d.Handsa && d.Handsa.toLowerCase().includes(searchTerm)) ||
+          (d.Keta3 && d.Keta3.toLowerCase().includes(searchTerm))
+        );
+      }
+
+      renderTable();
+    }
+
+    function clearFilters() {
+      document.querySelectorAll("input, select, textarea").forEach((input) => {
+        if (input.id !== "searchInput") input.value = "";
+      });
+      setTodayDates();
+      window.selectedRecord = null;
+      document.querySelectorAll(".selected-row").forEach((r) => {
+        r.classList.remove("selected-row");
+        r.style.backgroundColor = "";
+      });
+      toast("تم تنظيف النموذج", "success");
+    }
+
+    // Add new option functionality
+    function enableAddNewOptions() {
+      const exclude = new Set(["handsa", "keta3", "type", "mconn"]);
+
+      document.querySelectorAll("select").forEach((select) => {
+        const id = (select.id || "").toLowerCase();
+        if (exclude.has(id)) return;
+        if (select.querySelector(".add-new-option")) return;
+
+        const opt = document.createElement("option");
+        opt.value = "ADD_NEW";
+        opt.className = "add-new-option";
+        opt.textContent = "➕ إضافة نوع جديد...";
+        select.appendChild(opt);
+
+        select.addEventListener("change", async (e) => {
+          if (e.target.value !== "ADD_NEW") return;
+
+          const { value: newValue } = await Swal.fire({
+            title: "إضافة خيار جديد",
+            input: "text",
+            inputLabel: "اكتب الخيار الجديد",
+            showCancelButton: true,
+            confirmButtonText: "حفظ",
+            cancelButtonText: "إلغاء",
+            inputValidator: (v) => !v?.trim() ? "يرجى إدخال نص صحيح" : null,
+          });
+
+          const trimmed = newValue?.trim();
+          if (!trimmed) {
+            select.value = "";
+            return;
+          }
+
+          const exists = Array.from(select.options).some(
+            (opt) => opt.value.toLowerCase() === trimmed.toLowerCase() && opt.value !== "ADD_NEW"
+          );
+
+          if (exists) {
+            toast("الخيار موجود بالفعل", "info");
+            select.value = trimmed;
+            return;
+          }
+
+          const option = document.createElement("option");
+          option.value = trimmed;
+          option.textContent = trimmed;
+          const addNewOption = select.querySelector(".add-new-option");
+          select.insertBefore(option, addNewOption);
+          select.value = trimmed;
+          toast("تمت إضافة الخيار الجديد");
+        });
+      });
+    }
+
+    // Export to Excel
+    function exportToExcel() {
+      if (!filteredData.length) {
+        return Swal.fire({
+          icon: "warning",
+          title: "لا توجد بيانات",
+          text: "لا يمكن تصدير جدول فارغ",
+          confirmButtonColor: "#f39c12",
+        });
+      }
+
+      Swal.fire({
+        title: "تصدير البيانات",
+        text: "هل تريد تصدير الجدول الحالي إلى ملف Excel؟",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#27ae60",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "نعم",
+        cancelButtonText: "إلغاء",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const dataToExport = filteredData.map((o, i) => ({
+            م: i + 1,
+            "نوع النظام": o.Type || "",
+            "رقم العداد": o.MNO || "",
+            "اسم المشترك": o.MNAME || "",
+            "نوع العداد": o.Mtype || "",
+            "نوع التوصيل": o.Connection || "",
+            "سنة الصنع": o.YEAR || "",
+            القطاع: o.Keta3 || "",
+            الهندسة: o.Handsa || "",
+            "سبب الرفع": o.Removingfor || "",
+            "تاريخ الرفع": formatDate(o.Uploaddate),
+            "تقرير فحص الهندسة": o.Mremovingfor || "",
+            "سبب التكهين": o.Takheenfor || "",
+            "تاريخ التكهين": formatDate(o.Takheendate),
+            ملاحظات: o.Notes || "",
+          }));
+
+          const ws = XLSX.utils.json_to_sheet(dataToExport);
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, "أرشيف_التكهين");
+          XLSX.writeFile(wb, `أرشيف_التكهين_${new Date().toISOString().slice(0, 10)}.xlsx`);
+
+          Swal.fire({
+            icon: "success",
+            title: "تم التصدير!",
+            text: "تم تحميل ملف Excel بنجاح",
+            timer: 1500,
+            showConfirmButton: false,
+          });
+        }
+      });
+    }
+
+    // Event Listeners
+    el("saveBtn").onclick = saveData;
+    el("clearBtn").onclick = clearFilters;
+    el("searchInput").oninput = searchTable;
+
+    const exportBtn = el("exportBtn");
+    if (exportBtn) exportBtn.onclick = exportToExcel;
+
+    el("scrollUp").onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+    el("scrollDown").onclick = () => window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+
+    // Dropdown Menu
+    const btn = document.getElementById("dropdownBtn");
+    const menu = document.getElementById("dropdownMenu");
+
+    if (btn && menu) {
+      btn.addEventListener("click", () => {
+        menu.style.display = menu.style.display === "block" ? "none" : "block";
+      });
+
+      document.querySelectorAll(".dropdown-item[data-page]").forEach((item) => {
+        item.addEventListener("click", () => {
+          const page = item.dataset.page;
+          window.open(page, "_blank");
+        });
+      });
+
+      document.addEventListener("click", (e) => {
+        if (!e.target.closest(".modern-dropdown")) {
+          menu.style.display = "none";
+        }
+      });
+    }
+
+    // Initialize
+    enableAddNewOptions();
+    setTodayDates();
+    fetchData();
+  </script>
+</body>
+
+</html>
