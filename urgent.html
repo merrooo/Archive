@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIM Duplicate Extractor</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <style>
+        body { font-family: Arial; background: #1e1e2f; color: #fff; padding: 20px; }
+        .container { max-width: 1000px; margin: auto; background: #2d2d44; padding: 20px; border-radius: 10px; }
+        input, button { padding: 10px; margin: 10px 0; width: 100%; box-sizing: border-box; }
+        button { background: #4c9aff; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #6aaeff; }
+        button:disabled { background: #666; cursor: not-allowed; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #3d3d5c; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #5d5d7c; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #2e7d32; }
+        .error { background: #c62828; }
+        .info { background: #1565c0; }
+        .preview-wrapper { overflow-x: auto; max-height: 500px; overflow-y: auto; margin-top: 20px; }
+        .count-badge { background: #4c9aff; padding: 5px 10px; border-radius: 20px; display: inline-block; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>📱 Smart Qabda - Duplicate SIM Extractor</h2>
+    <p><strong>How it works:</strong> Take SIM numbers from File 2 → Search in File 1 → Extract matching rows with complete data</p>
+    
+    <label>📁 File 1 (Master Data - where to search and extract from)</label>
+    <input type="file" id="file1" accept=".xlsx,.xls,.csv">
+    
+    <label>📁 File 2 (SIM numbers to search - column name "Sim")</label>
+    <input type="file" id="file2" accept=".xlsx,.xls,.csv">
+    
+    <button id="extractBtn">🔍 Search & Extract Matches</button>
+    <button id="exportBtn" style="background:#4caf50;" disabled>💾 Export to Excel</button>
+    
+    <div id="status" class="status info">Ready. Upload both files.</div>
+    <div id="preview" class="preview-wrapper"></div>
+</div>
+
+<script>
+    let extractedData = [];
+
+    function readFile(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const json = XLSX.utils.sheet_to_json(sheet);
+                    resolve(json);
+                } catch(err) {
+                    reject(err);
+                }
+            };
+            reader.onerror = function(err) { reject(err); };
+            reader.readAsArrayBuffer(file);
+        });
+    }
+
+    function normalizeSim(sim) {
+        if (sim === undefined || sim === null) return '';
+        let str = String(sim).trim();
+        if (str.endsWith('.0')) str = str.slice(0, -2);
+        return str;
+    }
+
+    document.getElementById('extractBtn').onclick = async function() {
+        const file1 = document.getElementById('file1').files[0];
+        const file2 = document.getElementById('file2').files[0];
+        const status = document.getElementById('status');
+        
+        if (!file1 || !file2) {
+            status.innerHTML = '❌ Please upload both files!';
+            status.className = 'status error';
+            return;
+        }
+        
+        status.innerHTML = '⏳ Reading files...';
+        status.className = 'status info';
+        
+        try {
+            // Read both files
+            const data1 = await readFile(file1);
+            const data2 = await readFile(file2);
+            
+            if (data1.length === 0) throw new Error('File 1 is empty');
+            if (data2.length === 0) throw new Error('File 2 is empty');
+            
+            status.innerHTML = '⏳ Searching for matches...';
+            
+            // Get all SIM numbers from File 2 (column "Sim")
+            const searchSims = new Set();
+            for (let i = 0; i < data2.length; i++) {
+                const row = data2[i];
+                let sim = row.Sim || row.sim || row.SIM;
+                if (sim) {
+                    searchSims.add(normalizeSim(sim));
+                }
+            }
+            
+            if (searchSims.size === 0) {
+                status.innerHTML = '❌ No SIM numbers found in File 2. Looking for column "Sim". Available: ' + Object.keys(data2[0]).join(', ');
+                status.className = 'status error';
+                return;
+            }
+            
+            status.innerHTML = '⏳ Found ' + searchSims.size + ' SIM numbers in File 2. Searching in File 1...';
+            
+            // Search in File 1 (any column that might contain SIM numbers)
+            extractedData = [];
+            for (let i = 0; i < data1.length; i++) {
+                const row = data1[i];
+                // Check all values in the row for any SIM match
+                let found = false;
+                for (let key in row) {
+                    let val = row[key];
+                    if (val && searchSims.has(normalizeSim(val))) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) {
+                    extractedData.push(row);
+                }
+            }
+            
+            if (extractedData.length === 0) {
+                status.innerHTML = '⚠️ No matches found. The ' + searchSims.size + ' SIM numbers from File 2 were not found in File 1.';
+                status.className = 'status error';
+                document.getElementById('exportBtn').disabled = true;
+                document.getElementById('preview').innerHTML = '';
+                return;
+            }
+            
+            // Preview table
+            const columns = Object.keys(extractedData[0]);
+            let html = '<div class="count-badge">📊 Found ' + extractedData.length + ' matching rows in File 1</div>';
+            html += '<table border="1" style="border-collapse:collapse; width:100%">';
+            html += '<tr style="background:#4c9aff; position:sticky; top:0;">';
+            html += '<th style="padding:8px;">#</th>';
+            for (let i = 0; i < columns.length; i++) {
+                html += '<th style="padding:8px;">' + columns[i] + '</th>';
+            }
+            html += '</tr>';
+            
+            const showCount = Math.min(extractedData.length, 100);
+            for (let i = 0; i < showCount; i++) {
+                html += '<tr>';
+                html += '<td style="padding:8px;">' + (i+1) + '</td>';
+                for (let j = 0; j < columns.length; j++) {
+                    let val = extractedData[i][columns[j]];
+                    val = (val === undefined || val === null) ? '' : String(val);
+                    if (val.length > 40) val = val.substring(0, 40) + '...';
+                    html += '<td style="padding:8px;">' + val + '</td>';
+                }
+                html += '</tr>';
+            }
+            html += '</table>';
+            
+            if (extractedData.length > 100) {
+                html += '<p style="margin-top:10px;">... and ' + (extractedData.length - 100) + ' more rows</p>';
+            }
+            
+            document.getElementById('preview').innerHTML = html;
+            
+            status.innerHTML = '✅ Success! Found ' + extractedData.length + ' records in File 1 that match SIM numbers from File 2.';
+            status.className = 'status success';
+            document.getElementById('exportBtn').disabled = false;
+            
+        } catch (err) {
+            status.innerHTML = '❌ Error: ' + err.message;
+            status.className = 'status error';
+            console.error(err);
+        }
+    };
+    
+    document.getElementById('exportBtn').onclick = function() {
+        if (extractedData.length === 0) {
+            alert('No data to export');
+            return;
+        }
+        const ws = XLSX.utils.json_to_sheet(extractedData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Matched_Records');
+        const now = new Date();
+        const filename = 'matched_records_' + now.getFullYear() + '-' + (now.getMonth()+1) + '-' + now.getDate() + '.xlsx';
+        XLSX.writeFile(wb, filename);
+    };
+</script>
+</body>
+</html>

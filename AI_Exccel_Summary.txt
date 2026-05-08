@@ -1,0 +1,15 @@
+✅ Upload Excel file (small button top right)
+
+✅ Full data preview (all rows, no pagination)
+
+✅ 5 default dimensions (can add/remove more)
+
+✅ Generate Count Summary (pivot table)
+
+✅ Cascading filters on summary (checkboxes that filter each other)
+
+✅ Apply filters from summary to main table
+
+✅ Export pivot with totals
+
+✅ I want a search/filter input under each column header

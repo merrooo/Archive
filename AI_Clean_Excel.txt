@@ -1,0 +1,29 @@
+✅ Upload Excel file (small button top right)
+
+✅ Full data preview (all rows, no pagination)
+
+✅ Editable cells (double-click)
+
+✅ Editable headers (double-click)
+
+✅ Add/remove rows
+
+✅ Add/remove columns
+
+✅ Delete selected rows with checkbox
+
+✅ Export edited data to CSV
+
+✅ Select column to delete (not just last column)
+
+✅ Add column after selected column
+
+✅ Date conversion fixed (proper Excel date numbers → dd/mm/yyyy)
+
+✅ Single master button for split/export (next to upload)
+
+✅ Optimized performance (batch rendering, no hanging)
+
+✅ Preview & Fix column with dropdown selection
+
+✅ Compact sidebar ready for 20+ features
