@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Meter Wiring Corrector | Compare Expected vs Measured</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, 'Segoe UI', 'Inter', 'Roboto', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0f1a 0%, #0f1622 100%);
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            width: 100%;
+            background: rgba(15, 23, 42, 0.92);
+            border-radius: 2rem;
+            border: 1px solid #334155;
+            overflow: hidden;
+        }
+
+        .header {
+            background: #020617;
+            padding: 1.5rem;
+            text-align: center;
+            border-bottom: 1px solid #334155;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, #f97316, #facc15);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .header p {
+            color: #94a3b8;
+            margin-top: 0.4rem;
+            font-size: 0.9rem;
+        }
+
+        .content {
+            padding: 2rem;
+        }
+
+        .reference-banner {
+            background: #facc1510;
+            border: 1px solid #facc1540;
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .reference-banner label {
+            color: #facc15;
+            font-weight: 600;
+            margin-right: 1rem;
+        }
+
+        .ref-input {
+            background: #010514;
+            border: 1px solid #facc15;
+            border-radius: 2rem;
+            padding: 0.5rem 1rem;
+            width: 100px;
+            text-align: center;
+            color: #facc15;
+            font-family: monospace;
+            font-weight: bold;
+        }
+
+        .phases-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .phase-card {
+            flex: 1;
+            min-width: 280px;
+            background: #0f172a;
+            border-radius: 1.5rem;
+            border: 1px solid #334155;
+            overflow: hidden;
+        }
+
+        .phase-header {
+            padding: 1rem;
+            text-align: center;
+            font-weight: 800;
+            font-size: 1.3rem;
+            background: #00000040;
+            border-bottom: 1px solid #334155;
+        }
+
+        .phase-A .phase-header { color: #f87171; }
+        .phase-B .phase-header { color: #fbbf24; }
+        .phase-C .phase-header { color: #4ade80; }
+
+        .angle-row {
+            padding: 1rem;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        .angle-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: #94a3b8;
+            margin-bottom: 0.3rem;
+        }
+
+        .angle-input {
+            width: 100%;
+            background: #010514;
+            border: 1.5px solid #334155;
+            border-radius: 2rem;
+            padding: 0.7rem;
+            font-size: 1rem;
+            text-align: center;
+            color: #f1f5f9;
+            font-family: monospace;
+        }
+
+        .angle-input:focus {
+            outline: none;
+            border-color: #facc15;
+        }
+
+        .result-card {
+            background: #020617;
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            border-left: 6px solid #facc15;
+        }
+
+        .result-phase {
+            font-weight: 800;
+            font-size: 1rem;
+            margin-bottom: 0.8rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px dashed #334155;
+        }
+
+        .result-action {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            color: #bbf0d0;
+            background: #0f172a;
+            padding: 0.8rem;
+            border-radius: 0.8rem;
+            margin: 0.5rem 0;
+        }
+
+        .summary-box {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: #facc1510;
+            border-radius: 1rem;
+            border: 1px solid #facc15;
+            color: #facc15;
+            font-weight: 600;
+        }
+
+        button {
+            background: #1e293b;
+            border: 1px solid #475569;
+            padding: 0.6rem 1.5rem;
+            border-radius: 2rem;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 0.5rem 0.5rem 0 0;
+        }
+
+        button:hover {
+            background: #facc15;
+            color: #0f172a;
+        }
+
+        .footer {
+            background: #030712;
+            padding: 0.9rem;
+            text-align: center;
+            font-size: 0.7rem;
+            color: #5b6e8c;
+            border-top: 1px solid #1e2a3a;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>⚡ Compare Expected vs Measured</h1>
+        <p>Set the CORRECT (expected) angle → enter MEASURED angle → get exact action: SWAP or REVERSE</p>
+    </div>
+
+    <div class="content">
+        <div class="reference-banner">
+            <span>📐 CORRECT REFERENCE ANGLES (expected for your load type):</span>
+            <label>Phase A: <input type="number" id="refA" class="ref-input" value="0" step="1"></label>
+            <label>Phase B: <input type="number" id="refB" class="ref-input" value="0" step="1"></label>
+            <label>Phase C: <input type="number" id="refC" class="ref-input" value="0" step="1"></label>
+            <button id="setResistiveBtn" style="background:#facc1520; border-color:#facc15;">⚡ Resistive (0°,0°,0°)</button>
+            <button id="setMotorBtn" style="background:#facc1520; border-color:#facc15;">🔧 Inductive Motor (25°,25°,25°)</button>
+        </div>
+
+        <div class="phases-grid">
+            <!-- PHASE A -->
+            <div class="phase-card phase-A">
+                <div class="phase-header">🔴 PHASE A (V1 / I1)</div>
+                <div class="angle-row">
+                    <div class="angle-label">✅ CORRECT angle (expected)</div>
+                    <input type="number" id="expectedA" class="angle-input" value="0" step="1" style="border-color:#4ade8060;">
+                </div>
+                <div class="angle-row">
+                    <div class="angle-label">⚠️ MEASURED angle (actual)</div>
+                    <input type="number" id="measuredA" class="angle-input" value="-170" step="1">
+                </div>
+            </div>
+
+            <!-- PHASE B -->
+            <div class="phase-card phase-B">
+                <div class="phase-header">🟡 PHASE B (V2 / I2)</div>
+                <div class="angle-row">
+                    <div class="angle-label">✅ CORRECT angle (expected)</div>
+                    <input type="number" id="expectedB" class="angle-input" value="0" step="1" style="border-color:#4ade8060;">
+                </div>
+                <div class="angle-row">
+                    <div class="angle-label">⚠️ MEASURED angle (actual)</div>
+                    <input type="number" id="measuredB" class="angle-input" value="120" step="1">
+                </div>
+            </div>
+
+            <!-- PHASE C -->
+            <div class="phase-card phase-C">
+                <div class="phase-header">🟢 PHASE C (V3 / I3)</div>
+                <div class="angle-row">
+                    <div class="angle-label">✅ CORRECT angle (expected)</div>
+                    <input type="number" id="expectedC" class="angle-input" value="0" step="1" style="border-color:#4ade8060;">
+                </div>
+                <div class="angle-row">
+                    <div class="angle-label">⚠️ MEASURED angle (actual)</div>
+                    <input type="number" id="measuredC" class="angle-input" value="90" step="1">
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: center;">
+            <button id="diagnoseBtn">🔧 DIAGNOSE → EXACT ACTION</button>
+            <button id="resetExampleBtn">📋 Load example (-170,120,90 vs 0,0,0)</button>
+        </div>
+
+        <div id="resultsContainer" style="margin-top: 1.5rem;">
+            <!-- dynamic results -->
+        </div>
+    </div>
+    <div class="footer">
+        Based on DIFFERENCE between expected and measured angles → exact instruction: REVERSE CT polarity | SWAP voltages (V1↔V2, V2↔V3, V1↔V3) | MOVE CT to correct phase
+    </div>
+</div>
+
+<script>
+    function normAngle(x) {
+        let n = x;
+        while (n > 180) n -= 360;
+        while (n < -180) n += 360;
+        return n;
+    }
+
+    function getDifference(measured, expected) {
+        let diff = normAngle(measured - expected);
+        return diff;
+    }
+
+    function getExactAction(phaseLetter, measured, expected, allDiffs) {
+        let diff = getDifference(measured, expected);
+        let absDiff = Math.abs(diff);
+        
+        // REVERSE CT polarity: difference near 180° or -180°
+        if (absDiff > 150 || Math.abs(diff - 180) < 30 || Math.abs(diff + 180) < 30) {
+            return `🔁 REVERSE POLARITY of I${phaseLetter} (CT on Phase ${phaseLetter} is backwards)`;
+        }
+        
+        // SWAP VOLTAGE with adjacent phase: difference near 90° or -90° (cross-phase)
+        if (absDiff > 70 && absDiff < 110) {
+            // Determine which adjacent phase to swap with based on pattern
+            if (phaseLetter === 'A') return `🔄 SWAP VOLTAGE: exchange V1 with V2 (cross-phase detected)`;
+            if (phaseLetter === 'B') return `🔄 SWAP VOLTAGE: exchange V2 with V1 or V3 (check which one matches)`;
+            if (phaseLetter === 'C') return `🔄 SWAP VOLTAGE: exchange V3 with V2 (cross-phase detected)`;
+        }
+        
+        // MOVE CT to correct phase: difference near 120° or -120°
+        if (absDiff > 100 && absDiff < 140) {
+            if (phaseLetter === 'A') return `📦 MOVE CT: Phase A CT is installed on Phase B conductor → relocate to Phase A OR swap I1 with I2`;
+            if (phaseLetter === 'B') return `📦 MOVE CT: Phase B CT is installed on Phase C conductor → relocate to Phase B OR swap I2 with I3`;
+            if (phaseLetter === 'C') return `📦 MOVE CT: Phase C CT is installed on Phase A conductor → relocate to Phase C OR swap I3 with I1`;
+        }
+        
+        // Difference near 0° -> correct
+        if (absDiff < 15) {
+            return `✅ CORRECT — no action needed for Phase ${phaseLetter}`;
+        }
+        
+        // Difference near -30° (common when CT reversed on inductive load)
+        if (diff > -50 && diff < -10) {
+            return `🔁 REVERSE POLARITY of I${phaseLetter} (CT reversed on inductive load)`;
+        }
+        
+        // Fallback: general advice based on difference
+        return `⚠️ Difference = ${diff}° → ${diff > 0 ? 'lagging' : 'leading'} by ${absDiff}°. Check CT polarity and phase assignment.`;
+    }
+
+    function getGlobalSummary(expectedAngles, measuredAngles, actions) {
+        let aDiff = getDifference(measuredAngles.A, expectedAngles.A);
+        let bDiff = getDifference(measuredAngles.B, expectedAngles.B);
+        let cDiff = getDifference(measuredAngles.C, expectedAngles.C);
+        
+        let absADiff = Math.abs(aDiff);
+        let absBDiff = Math.abs(bDiff);
+        let absCDiff = Math.abs(cDiff);
+        
+        // Pattern: all three differences near 180° -> all CTs reversed
+        if (absADiff > 150 && absBDiff > 150 && absCDiff > 150) {
+            return "GLOBAL: All three CTs reversed. Reverse I1, I2, and I3.";
+        }
+        
+        // Pattern: two CTs reversed
+        let reversedCount = [absADiff > 150, absBDiff > 150, absCDiff > 150].filter(Boolean).length;
+        if (reversedCount === 2) {
+            let reversedPhases = [];
+            if (absADiff > 150) reversedPhases.push("I1");
+            if (absBDiff > 150) reversedPhases.push("I2");
+            if (absCDiff > 150) reversedPhases.push("I3");
+            return `GLOBAL: ${reversedCount} CTs reversed. Reverse ${reversedPhases.join(" and ")}.`;
+        }
+        
+        // Pattern: all three near 120° -> entire CT bank shifted
+        if ((absADiff > 100 && absADiff < 140) && (absBDiff > 100 && absBDiff < 140) && (absCDiff > 100 && absCDiff < 140)) {
+            return "GLOBAL: All three CTs on wrong phases. Move each CT to next phase conductor (A→B, B→C, C→A).";
+        }
+        
+        // Pattern: voltage swap between phases
+        if ((absADiff > 70 && absADiff < 110) && (absBDiff > 70 && absBDiff < 110)) {
+            return "GLOBAL: Voltage swap detected between Phase A and B. Exchange V1 and V2.";
+        }
+        if ((absBDiff > 70 && absBDiff < 110) && (absCDiff > 70 && absCDiff < 110)) {
+            return "GLOBAL: Voltage swap detected between Phase B and C. Exchange V2 and V3.";
+        }
+        if ((absADiff > 70 && absADiff < 110) && (absCDiff > 70 && absCDiff < 110)) {
+            return "GLOBAL: Voltage swap detected between Phase A and C. Exchange V1 and V3.";
+        }
+        
+        // Pattern: all correct
+        if (absADiff < 15 && absBDiff < 15 && absCDiff < 15) {
+            return "GLOBAL: All phases correct. No action needed.";
+        }
+        
+        return "GLOBAL: Follow per-phase instructions above.";
+    }
+    
+    function diagnose() {
+        // Get expected angles (can be per-phase or from global reference)
+        let expected = {
+            A: parseFloat(document.getElementById('expectedA').value) || 0,
+            B: parseFloat(document.getElementById('expectedB').value) || 0,
+            C: parseFloat(document.getElementById('expectedC').value) || 0
+        };
+        
+        let measured = {
+            A: parseFloat(document.getElementById('measuredA').value) || 0,
+            B: parseFloat(document.getElementById('measuredB').value) || 0,
+            C: parseFloat(document.getElementById('measuredC').value) || 0
+        };
+        
+        let allDiffs = {
+            A: getDifference(measured.A, expected.A),
+            B: getDifference(measured.B, expected.B),
+            C: getDifference(measured.C, expected.C)
+        };
+        
+        let actions = {
+            A: getExactAction('1', measured.A, expected.A, allDiffs),
+            B: getExactAction('2', measured.B, expected.B, allDiffs),
+            C: getExactAction('3', measured.C, expected.C, allDiffs)
+        };
+        
+        let summary = getGlobalSummary(expected, measured, actions);
+        
+        let html = `
+            <div class="result-card">
+                <div class="result-phase">
+                    🔴 PHASE A | Expected: ${expected.A}° | Measured: ${measured.A}° | Difference: ${allDiffs.A}°
+                </div>
+                <div class="result-action">${actions.A}</div>
+            </div>
+            <div class="result-card">
+                <div class="result-phase">
+                    🟡 PHASE B | Expected: ${expected.B}° | Measured: ${measured.B}° | Difference: ${allDiffs.B}°
+                </div>
+                <div class="result-action">${actions.B}</div>
+            </div>
+            <div class="result-card">
+                <div class="result-phase">
+                    🟢 PHASE C | Expected: ${expected.C}° | Measured: ${measured.C}° | Difference: ${allDiffs.C}°
+                </div>
+                <div class="result-action">${actions.C}</div>
+            </div>
+            <div class="summary-box">
+                📌 ${summary}
+            </div>
+        `;
+        
+        document.getElementById('resultsContainer').innerHTML = html;
+    }
+    
+    function syncGlobalReference() {
+        let refA = parseFloat(document.getElementById('refA').value) || 0;
+        let refB = parseFloat(document.getElementById('refB').value) || 0;
+        let refC = parseFloat(document.getElementById('refC').value) || 0;
+        
+        document.getElementById('expectedA').value = refA;
+        document.getElementById('expectedB').value = refB;
+        document.getElementById('expectedC').value = refC;
+        
+        diagnose();
+    }
+    
+    function setResistive() {
+        document.getElementById('refA').value = 0;
+        document.getElementById('refB').value = 0;
+        document.getElementById('refC').value = 0;
+        syncGlobalReference();
+    }
+    
+    function setMotor() {
+        document.getElementById('refA').value = 25;
+        document.getElementById('refB').value = 25;
+        document.getElementById('refC').value = 25;
+        syncGlobalReference();
+    }
+    
+    function loadExample() {
+        document.getElementById('refA').value = 0;
+        document.getElementById('refB').value = 0;
+        document.getElementById('refC').value = 0;
+        document.getElementById('measuredA').value = -170;
+        document.getElementById('measuredB').value = 120;
+        document.getElementById('measuredC').value = 90;
+        syncGlobalReference();
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('diagnoseBtn').addEventListener('click', diagnose);
+        document.getElementById('setResistiveBtn').addEventListener('click', setResistive);
+        document.getElementById('setMotorBtn').addEventListener('click', setMotor);
+        document.getElementById('resetExampleBtn').addEventListener('click', loadExample);
+        
+        document.getElementById('refA').addEventListener('change', syncGlobalReference);
+        document.getElementById('refB').addEventListener('change', syncGlobalReference);
+        document.getElementById('refC').addEventListener('change', syncGlobalReference);
+        
+        ['expectedA', 'expectedB', 'expectedC', 'measuredA', 'measuredB', 'measuredC'].forEach(id => {
+            document.getElementById(id).addEventListener('change', diagnose);
+            document.getElementById(id).addEventListener('input', diagnose);
+        });
+        
+        diagnose();
+    });
+</script>
+</body>
+</html>
